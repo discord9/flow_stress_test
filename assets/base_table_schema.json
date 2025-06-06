@@ -1,0 +1,56 @@
+{
+    "table_schema": [
+        {
+            "name": "time",
+            "type": "TIMESTAMP(3)",
+            "semantic": "Timestamp"
+        },
+        {
+            "name": "env",
+            "type": "STRING",
+            "semantic": "Tag"
+        },
+        {
+            "name": "service_name",
+            "type": "STRING",
+            "semantic": "Tag"
+        },
+        {
+            "name": "city",
+            "type": "STRING"
+        },
+        {
+            "name": "page",
+            "type": "STRING"
+        },
+        {
+            "name": "lcp",
+            "type": "BIGINT"
+        },
+        {
+            "name": "fmp",
+            "type": "BIGINT"
+        },
+        {
+            "name": "fcp",
+            "type": "BIGINT"
+        },
+        {
+            "name": "fp",
+            "type": "BIGINT"
+        },
+        {
+            "name": "tti",
+            "type": "BIGINT"
+        },
+        {
+            "name": "fid",
+            "type": "BIGINT"
+        },
+        {
+            "name": "shard_key",
+            "type": "BIGINT"
+        }
+    ],
+    "gen_by": ["env", "service_name", "city", "page"]
+}
