@@ -1,0 +1,12 @@
+[package]
+name = "flow_stress_test"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+snafu = "0.8"
+tokio = { version = "1.40", features = ["full"] }
+
+client = { git = "https://github.com/GreptimeTeam/greptimedb.git", rev = "3d942f676356cb557d791c7559e191075460540d" }
+api = { git = "https://github.com/GreptimeTeam/greptimedb.git", rev = "3d942f676356cb557d791c7559e191075460540d" }
+common-telemetry = { git = "https://github.com/GreptimeTeam/greptimedb.git", rev = "3d942f676356cb557d791c7559e191075460540d" }
