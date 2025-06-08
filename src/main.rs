@@ -2,6 +2,8 @@ use api::v1::{Column, ColumnDataType, InsertRequest, InsertRequests, SemanticTyp
 use clap::Parser;
 use client::{Client, Database};
 use common_telemetry::{error, info, logging::TracingOptions};
+use rand::{Rng, SeedableRng};
+use rand::rngs::StdRng;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
@@ -61,6 +63,8 @@ fn gen_range_insert_reqs(
     range: std::ops::Range<usize>,
     cfg: &Config,
     max_timeline: usize,
+    max_out_of_order_ms: u64,
+    rng: &mut StdRng,
 ) -> InsertRequest {
     let column_defs = &cfg.table_schema;
     let mut columns = Vec::new();
@@ -74,8 +78,21 @@ fn gen_range_insert_reqs(
 
         match col_def.data_type.as_str() {
             "TIMESTAMP(3)" => {
+                let timestamp_values: Vec<i64> = if col_def.semantic == SemanticType::Timestamp
+                    && max_out_of_order_ms > 0
+                {
+                    range
+                        .clone()
+                        .map(|i| {
+                            let offset = rng.gen_range(0..=max_out_of_order_ms) as i64;
+                            (i as i64) - offset
+                        })
+                        .collect()
+                } else {
+                    range.clone().map(|i| i as i64).collect()
+                };
                 column.values = Some(column::Values {
-                    timestamp_millisecond_values: range.clone().map(|i| i as i64).collect(),
+                    timestamp_millisecond_values: timestamp_values,
                     ..Default::default()
                 });
                 column.semantic_type = col_def.semantic as i32;
@@ -163,11 +180,19 @@ async fn main() {
 
     let mut tick = tokio::time::interval(std::time::Duration::from_millis(1000));
     let mut cnt = args.start_index;
+    let mut rng = StdRng::seed_from_u64(args.seed);
 
     loop {
         for _ in 0..args.rps / args.rows_per_req {
             let range = cnt..cnt + args.rows_per_req;
-            let req = gen_range_insert_reqs("base_table", range, &config, args.max_timeline);
+            let req = gen_range_insert_reqs(
+                "base_table",
+                range,
+                &config,
+                args.max_timeline,
+                args.max_out_of_order_ms,
+                &mut rng,
+            );
             let res = database.insert(InsertRequests { inserts: vec![req] }).await;
             if let Err(e) = res {
                 error!(e; "Failed to insert {} rows", args.rows_per_req);
